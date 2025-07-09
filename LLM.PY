@@ -27,7 +27,7 @@ query = st.text_input("Enter your question", "")
 key_word = []
 sql_rows = []
 
-if st.button("Fetch Keywords"):
+if st.button("Fetch Keywords & LLM Summary"):
     if not query.strip():
         st.error("Please enter a valid question.")
     else:
@@ -53,9 +53,6 @@ def format_row(row):
 def create_context_from_rows(rows):
     return "\n\n---\n\n".join([format_row(row) for row in rows])
 
-if sql_rows:
-    st.markdown("### SQL Results:")
-    st.markdown(create_context_from_rows(sql_rows))
 
 def summarize_rows_llm(context, user_question, model="qwen:0.5b"):
     prompt = f"""
@@ -67,6 +64,7 @@ def summarize_rows_llm(context, user_question, model="qwen:0.5b"):
             Question: {user_question}
             Answer:
             """
+    print(f"Prompt: {prompt}")
 
     response = ollama.chat(model=model, messages=[
         {"role": "user", "content": prompt}
@@ -74,8 +72,13 @@ def summarize_rows_llm(context, user_question, model="qwen:0.5b"):
 
     return response['message']['content']
 
+if sql_rows:
+    st.markdown("### SQL Results:")
+    context = create_context_from_rows(sql_rows)
+    st.markdown(context)
+    st.markdown("LLM SUMMARY")
+    st.markdown(summarize_rows_llm(context, query, model="qwen:0.5b"))
 
-if st.button("LLM Summary"):
-        st.subheader("LLM Summary:")
-        st.markdown(summarize_rows_llm(sql_rows, query, model="qwen:0.5b"))
-    
+
+
+   
